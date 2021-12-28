@@ -1,7 +1,7 @@
 const server = require("http").createServer();
 const io = require("socket.io")(server, {
   cors: {
-    origin: ["https://launch.playcanvas.com", "https://playcanv.as"],
+    origin: ["https://launch.playcanvas.com", "https://playcanv.as", "http://127.0.0.1:8000", "http://127.0.0.1:8000"],
     methods: ["GET", "POST"]
   }
 });
@@ -42,7 +42,7 @@ io.sockets.on(events.CONNECTION, function(socket) {
 
     socket.broadcast.emit(events.PLAYER_JOINED, newPlayer);
 
-    console.log("Online Players: " + players.Keys().length);
+   // console.log("Online Players: " + players.Keys().length);
   };
 
   // When a new player joins
@@ -51,9 +51,12 @@ io.sockets.on(events.CONNECTION, function(socket) {
   
 
   socket.on(events.CAUSE_DAMAGE, function(data) {
+    /*
     socket
       .to(data.playerId)
       .emit("updateHealth", players[data.playerId].health);
+      */
+     if(players[data.playerId]) {
     players[data.playerId].health -= data.amount;
 
     console.log("Took " + data.amount);
@@ -68,22 +71,24 @@ io.sockets.on(events.CONNECTION, function(socket) {
         .to(data.playerId)
         .emit("updateHealth", players[data.playerId].health);
     }
+  }
   });
 
   socket.on(events.POSITION_UPDATE, function(data) {
+    if(players[data.id]) {
     players[data.id].rot = data.rot;
     players[data.id].pos = data.pos;
     socket.broadcast.emit("playerMoved", data);
+  }
   });
 
-  /*
   socket.on("disconnect", function() {
     console.log("Got disconnect!");
     console.log("players: " + playerCount);
   });
-  */
+  
 
-  socket.on(events.DISCONNECT, disconnectPlayer);
+  //socket.on(events.DISCONNECT, disconnectPlayer);
 });
 
 const disconnectPlayer = socket => {
